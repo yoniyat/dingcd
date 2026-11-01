@@ -32,11 +32,11 @@
     "secret": true
   },
   {
-    "id": "mymovie",
-    "title": "My Movie Title",
-    "desc": "A short description of the movie.",
+    "id": "ding1",
+    "title": "Dingvengers: The Last 3",
+    "desc": "the last 3 fight together to defeat benom!",
     "yt": "JfYwfh-NPRo",
-    "code": "MYCODE",
+    "code": "DING1",
     "secret": false
   }
 ]
