@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no,interactive-widget=resizes-content">
 <title>DingCD</title>
 <style>
 :root{--ink:#f4f4ff;--tape:#ffe94a;--mag:#ff2e88;--cy:#29e0ff}
@@ -8,6 +8,7 @@
 html,body{margin:0;height:100%;overflow:hidden;background:#02030a;color:var(--ink);font-family:"Lucida Console","Courier New",monospace;font-weight:700}
 button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
 .osd{letter-spacing:.08em;text-shadow:1.5px 0 var(--mag),-1.5px 0 var(--cy)}
+body{position:fixed;inset:0;width:100%;overflow:clip}
 #stage{position:absolute;left:0;top:0;width:1227px;height:1281px;transform-origin:0 0;background:#02030a}
 #stage>*{position:absolute}
 #room{left:0;top:0;width:1227px;height:1281px}
@@ -84,7 +85,6 @@ const MOVIES=[
  {id:'sintel',title:'Sintel',desc:'A young woman searches for the dragon she once raised. Placeholder movie for testing.',yt:'eRsGyueVLvQ',code:'SINTEL',secret:false},
  {id:'steel',title:'Tears of Steel',desc:'Warriors and scientists try to save the world from robots. Placeholder movie for testing.',yt:'R6MlUcmOul8',code:'STEEL',secret:false},
  {id:'hush',title:'Secret Test Disc',desc:'A secret disc. Watch once, then it is gone.',yt:'aqz-KE-bpKQ',code:'HUSH',secret:true}
-  {id:'ding1',title:'Dingvengers: The last three',desc:'The last 3 fight against benom!',yt:'JfYwfh-NPRo',code:'DING001',secret:false},
 ];
 const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const thumb=m=>m.thumb||'https://img.youtube.com/vi/'+m.yt+'/hqdefault.jpg',norm=s=>String(s).toUpperCase().replace(/\s+/g,'');
@@ -95,10 +95,14 @@ let view='home',lm='movies',note='',bad=false,busy=false,arm=false,cur=null,play
 fetch('cd.mp3').then(r=>r.blob()).then(b=>{sfx=URL.createObjectURL(b)}).catch(()=>{});
 /* ---- fit the room to the phone ---- */
 const stage=$('#stage');
-function layout(){if(busy)return;const w=innerWidth,h=innerHeight,s=Math.max(w/1227,h/1281,w/600),
- l=Math.min(0,Math.max(w-1227*s,w/2-614*s)),t=Math.min(0,Math.max(h-1281*s,h/2-570*s));
- stage.style.transition='none';stage.style.transform='translate('+l+'px,'+t+'px) scale('+s+')'}
-addEventListener('resize',layout);layout();
+function layout(){if(busy)return;const vv=window.visualViewport,w=vv?vv.width:innerWidth,h=vv?vv.height:innerHeight,
+ s=Math.max(w/1227,h/1281,w/600),l=Math.min(0,Math.max(w-1227*s,w/2-614*s)),t=Math.min(0,Math.max(h-1281*s,h/2-570*s));
+ stage.style.transition='none';stage.style.transform='translate('+l+'px,'+t+'px) scale('+s+')';
+ const r=stage.getBoundingClientRect(),dx=l-(r.left-(vv?vv.offsetLeft:0)),dy=t-(r.top-(vv?vv.offsetTop:0));
+ if(Math.abs(dx)>1||Math.abs(dy)>1)stage.style.transform='translate('+(l+dx)+'px,'+(t+dy)+'px) scale('+s+')'}
+['resize','scroll','focusin','focusout'].forEach(e=>addEventListener(e,()=>{window.scrollTo(0,0);layout();setTimeout(layout,120);setTimeout(layout,450)}));
+if(window.visualViewport){visualViewport.addEventListener('resize',layout);visualViewport.addEventListener('scroll',layout)}
+layout();
 /* ---- TV screen views ---- */
 const scr=$('#scr'),T={movies:'My Movies',favs:'Favorites',recent:'Recently Watched',search:'Search'};
 const EM={movies:'No movies yet. Enter a disc code to add one.',favs:'No favorites yet. Tap the heart on a movie.',recent:'Nothing watched yet.',search:'No movies match.'};
@@ -142,7 +146,7 @@ function sound(next){let done=false;const fin=()=>{if(done)return;done=true;next
  if(!S.snd){setTimeout(fin,3500);return}
  const a=new Audio(sfx||'cd.mp3');a.onended=fin;a.onerror=()=>setTimeout(fin,3000);const p=a.play();if(p&&p.catch)p.catch(()=>setTimeout(fin,3000));setTimeout(fin,16000)}
 /* zoom into the TV screen, then the video starts */
-function zoom(cb){const w=innerWidth,h=innerHeight,s=Math.max(w/318,h/236)*1.04;
+function zoom(cb){const vv=window.visualViewport,w=vv?vv.width:innerWidth,h=vv?vv.height:innerHeight,s=Math.max(w/318,h/236)*1.04;
  stage.style.transition='transform 1.7s cubic-bezier(.6,0,.3,1)';
  stage.style.transform='translate('+(w/2-615*s)+'px,'+(h/2-549*s)+'px) scale('+s+')';
  setTimeout(()=>{cb();setTimeout(()=>{$('#disc').classList.remove('show');busy=false;layout();if(view==='home')setNote('')},500)},1800)}
@@ -184,5 +188,10 @@ $('#pFav').onclick=()=>{if(cur){tf(cur.id);updFav();ctl(true)}};
 window.dingBack=()=>{if($('#player').classList.contains('on')){closePlayer();return true}
  if($('#bk').classList.contains('on')){closeBook();return true}if(busy)return true;
  if(view==='list'){menu();return true}if(view!=='home'){home();return true}return false};
+/* ---- movie list: online file (movies.json on GitHub) with the list above as offline backup ---- */
+const MOVIES_URL='https://raw.githubusercontent.com/yoniyat/dingcd/main/movies.json';
+function useList(d){const ok=Array.isArray(d)?d.filter(x=>x&&x.id&&x.title&&x.yt&&x.code):[];if(!ok.length)return false;MOVIES.length=0;ok.forEach(x=>MOVIES.push(x));return true}
+try{useList(JSON.parse(localStorage.getItem('dc_movies')))}catch(e){}
+fetch(MOVIES_URL+'?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():Promise.reject()).then(d=>{if(useList(d)){try{localStorage.setItem('dc_movies',JSON.stringify(d))}catch(e){}if(view==='list')fill()}}).catch(()=>{});
 home();
 </script></body></html>
