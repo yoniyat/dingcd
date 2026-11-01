@@ -1,0 +1,42 @@
+[
+  {
+    "id": "bunny",
+    "title": "Big Buck Bunny",
+    "desc": "A giant rabbit gets even with three bullying rodents. Placeholder movie for testing.",
+    "yt": "aqz-KE-bpKQ",
+    "code": "BUNNY",
+    "secret": false
+  },
+  {
+    "id": "sintel",
+    "title": "Sintel",
+    "desc": "A young woman searches for the dragon she once raised. Placeholder movie for testing.",
+    "yt": "eRsGyueVLvQ",
+    "code": "SINTEL",
+    "secret": false
+  },
+  {
+    "id": "steel",
+    "title": "Tears of Steel",
+    "desc": "Warriors and scientists try to save the world from robots. Placeholder movie for testing.",
+    "yt": "R6MlUcmOul8",
+    "code": "STEEL",
+    "secret": false
+  },
+  {
+    "id": "hush",
+    "title": "Secret Test Disc",
+    "desc": "A secret disc. Watch once, then it is gone.",
+    "yt": "aqz-KE-bpKQ",
+    "code": "HUSH",
+    "secret": true
+  },
+  {
+    "id": "mymovie",
+    "title": "My Movie Title",
+    "desc": "A short description of the movie.",
+    "yt": "JfYwfh-NPRo",
+    "code": "MYCODE",
+    "secret": false
+  }
+]
